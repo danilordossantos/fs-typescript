@@ -16,7 +16,7 @@ const parseArgumentsBmi = (args: string[]): BmiValues => {
     }
 };
 
-const calculateBmi = (height: number, weight: number): string => {
+export const calculateBmi = (height: number, weight: number): string => {
     const heightInMeters = height / 100;
     const bmi = weight / heightInMeters ** 2;
 
@@ -31,14 +31,16 @@ const calculateBmi = (height: number, weight: number): string => {
     }
 };
 
-try {
-    const { height, weight } = parseArgumentsBmi(process.argv);
-    console.log(calculateBmi(height, weight));
-} catch (error: unknown) {
-    let errorMessage = 'Something bad happened. ';
-    if (error instanceof Error) {
-        errorMessage += 'Error: ' + error.message;
-    }
+if (process.argv[1] === import.meta.filename) {
+    try {
+        const { height, weight } = parseArgumentsBmi(process.argv);
+        console.log(calculateBmi(height, weight));
+    } catch (error: unknown) {
+        let errorMessage = 'Something bad happened. ';
+        if (error instanceof Error) {
+            errorMessage += 'Error: ' + error.message;
+        }
 
-    console.log(errorMessage);
+        console.log(errorMessage);
+    }
 }
