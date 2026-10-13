@@ -25,7 +25,7 @@ const parseArgumentsExercises = (args: string[]): ExercisesValues => {
     }
 };
 
-const calculateExercises = (target: number, trainingHours: number[]): ExercisesResult => {
+export const calculateExercises = (target: number, trainingHours: number[]): ExercisesResult => {
     const average = trainingHours.reduce((sum, current) => {
         return sum + current;
     }, 0) / trainingHours.length;
@@ -42,7 +42,7 @@ const calculateExercises = (target: number, trainingHours: number[]): ExercisesR
         ratingDescription = 'not too bad but could be better';
     } else {
         rating = 1;
-        ratingDescription = 'too bad';
+        ratingDescription = 'bad';
     }
 
     return {
@@ -56,14 +56,18 @@ const calculateExercises = (target: number, trainingHours: number[]): ExercisesR
     };
 };
 
-try {
-    const { target, trainingHours } = parseArgumentsExercises(process.argv);
-    console.log(calculateExercises(target, trainingHours));
-} catch (error: unknown) {
-    let errorMessage = 'Something bad happened. ';
-    if (error instanceof Error) {
-        errorMessage += 'Error: ' + error.message;
-    }
+if (process.argv[1] === import.meta.filename) {
+    try {
+        const { target, trainingHours } = parseArgumentsExercises(process.argv);
+        console.log(calculateExercises(target, trainingHours));
+    } catch (error: unknown) {
+        let errorMessage = 'Something bad happened. ';
+        if (error instanceof Error) {
+            errorMessage += 'Error: ' + error.message;
+        }
 
-    console.log(errorMessage);
+        console.log(errorMessage);
+    }
 }
+
+
