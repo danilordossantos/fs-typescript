@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc",
-    "dev": "concurrently \"tsc --watch\" \"node --watch --experimental-transform-types index.ts\"",
-    "start": "tsc && node --experimental-transform-types index.ts",
+    "dev": "concurrently \"tsc --watch\" \"node --watch --experimental-transform-types src/index.ts\"",
+    "start": "tsc && node --experimental-transform-types src/index.ts",
     "lint": "eslint ."
   },
   "keywords": [],
