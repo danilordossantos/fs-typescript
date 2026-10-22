@@ -1,16 +1,16 @@
-import type { NewPatient } from "./types.ts";
+import { Gender, type NewPatient } from "./types.ts";
 
 const parseNewPatient = (object: unknown): NewPatient => {
     if (!object || typeof object !== 'object') {
         throw new Error('Incorrect or missing data');
     }
 
-    if ('name' in object && 'ssn' in object && 'occupation' in object && 'dateOfBirth' in object) {
+    if ('name' in object && 'ssn' in object && 'occupation' in object && 'dateOfBirth' in object && 'gender' in object) {
         const newPatient: NewPatient = {
             name: parseString(object.name, 'name'),
             dateOfBirth: parseDate(object.dateOfBirth),
             ssn: parseString(object.ssn, 'ssn'),
-            gender: 'male',
+            gender: parseGender(object.gender),
             occupation: parseString(object.occupation, 'occupation')
         };
 
@@ -28,6 +28,10 @@ const isDate = (date: string): boolean => {
     return !isNaN(Date.parse(date));
 };
 
+const isGender = (param: string): param is Gender => {
+    return (Object.values(Gender) as string[]).includes(param);
+};
+
 const parseString = (value: unknown, field: string): string => {
     if (!isString(value) || !value.trim()) {
         throw new Error(`Incorrect or missing ${field}`);
@@ -41,6 +45,13 @@ const parseDate = (date: unknown): string => {
         throw new Error('Incorrect or missing dateOfBirth');
     }
     return date;
+};
+
+const parseGender = (gender: unknown): Gender => {
+    if (!isString(gender) || !isGender(gender)) {
+        throw new Error('Incorrect or missing gender');
+    }
+    return gender;
 };
 
 export default parseNewPatient;
