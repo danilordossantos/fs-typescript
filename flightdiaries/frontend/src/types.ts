@@ -25,6 +25,15 @@ export interface DiaryEntry {
     comment?: string;
 }
 
+export interface ValidationIssue {
+  message: string;
+  path: string[];
+}
+
+export interface ValidationErrorResponse {
+  error: ValidationIssue[];
+}
+
 export type NonSensitiveDiaryEntry = Omit<DiaryEntry, 'comment'>;
 
 export type NewDiaryEntry = Omit<DiaryEntry, 'id'>;
