@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react"
-import { type Visibility, type NonSensitiveDiaryEntry, type Weather } from "./types"
+import { useEffect, useState } from 'react'
+import { type Visibility, type NonSensitiveDiaryEntry, type Weather, type ValidationErrorResponse } from './types'
 import diaryService from './diaryService'
+import axios from 'axios';
 
 function App() {
 
@@ -9,6 +10,7 @@ function App() {
   const [comment, setComment] = useState('');
   const [weather, setWeather] = useState('');
   const [visibility, setVisibility] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     diaryService.getAll().then(initialDiaries => {
@@ -20,15 +22,26 @@ function App() {
     event.preventDefault()
     diaryService.create({
       date: date, comment: comment,
-      weather: weather as Weather, // left at 9.22
-      visibility: visibility as Visibility, // left at 9.22
-    }).then(returnedDiary => {
-      setDiaries(diaries.concat(returnedDiary))
+      weather: weather as Weather, // remove in 9.22
+      visibility: visibility as Visibility, // remove in 9.22
     })
-    setDate('')
-    setComment('')
-    setWeather('')
-    setVisibility('')
+      .then(returnedDiary => {
+        setDiaries(diaries.concat(returnedDiary))
+        setDate('')
+        setComment('')
+        setWeather('')
+        setVisibility('')
+        setErrorMessage('')
+      })
+      .catch((error: unknown) => {
+        if (axios.isAxiosError<ValidationErrorResponse>(error)) {
+          const data = error.response?.data;
+          if (data) {
+            const message = data.error.map(item => `${item.path.join('.')}: ${item.message}`).join(', ')
+            setErrorMessage(message);
+          }
+        }
+      });
   };
 
   return (
@@ -43,6 +56,7 @@ function App() {
           </li>
         )}
       </ul>
+      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
       <form onSubmit={diaryCreation}>
         <p>Date: <input value={date} onChange={(event) => setDate(event.target.value)} /></p>
         <p>Comment: <input value={comment} onChange={(event) => setComment(event.target.value)} /></p>
