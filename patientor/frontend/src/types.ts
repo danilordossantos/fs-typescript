@@ -15,8 +15,15 @@ export interface Patient {
   name: string;
   occupation: string;
   gender: Gender;
-  ssn?: string;
-  dateOfBirth?: string;
+  ssn: string;
+  dateOfBirth: string;
+  entries: Entry[]
 }
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface Entry {
+}
+
+export type NonSensitivePatient = Omit<Patient, 'ssn' | 'entries'>;
 
 export type PatientFormValues = Omit<Patient, "id" | "entries">;
