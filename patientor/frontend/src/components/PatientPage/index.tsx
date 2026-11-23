@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import patientService from '../../services/patients';
-import { Diagnosis, Gender, HealthCheckRating, Patient, ValidationErrorResponse } from "../../types";
+import { Diagnosis, Entry, EntryWithoutId, Gender, HealthCheckRating, Patient, ValidationErrorResponse } from "../../types";
 import React, { useEffect, useState } from "react";
 import MaleIcon from '@mui/icons-material/Male';
 import FemaleIcon from '@mui/icons-material/Female';
@@ -34,6 +34,12 @@ const PatientPage = ({ diagnoses }: Props) => {
     const [healthCheckRating, setHealthCheckRating] = useState('');
     const [diagnosisCodes, setDiagnosisCodes] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [type, setType] = useState<Entry['type']>('HealthCheck');
+    const [employerName, setEmployerName] = useState('');
+    const [dischargeDate, setDischargeDate] = useState('');
+    const [dischargeCriteria, setDischargeCriteria] = useState('');
+    const [sickLeaveStart, setSickLeaveStart] = useState('');
+    const [sickLeaveEnd, setSickLeaveEnd] = useState('');
     const params = useParams();
 
 
@@ -52,22 +58,60 @@ const PatientPage = ({ diagnoses }: Props) => {
         if (!patient) {
             return;
         }
-        try {
-            const newEntry = await patientService.addEntry(patient.id, {
-                type: 'HealthCheck',
+
+        const buildEntry = (): EntryWithoutId => {
+            const base = {
                 description,
                 date,
                 specialist,
-                healthCheckRating: Number(healthCheckRating) as HealthCheckRating,
-                diagnosisCodes: diagnosisCodes === '' ? undefined : diagnosisCodes.split(',').map(d => d.trim())
-            });
-            setPatient({...patient, entries: patient.entries.concat(newEntry)});
+                diagnosisCodes: diagnosisCodes === '' ? undefined : diagnosisCodes.split(',').map(d => d.trim()),
+            };
+
+            switch (type) {
+                case 'HealthCheck':
+                    return {
+                        ...base,
+                        type: 'HealthCheck',
+                        healthCheckRating: Number(healthCheckRating) as HealthCheckRating, // remove in 9.32
+                    };
+                case 'Hospital':
+                    return {
+                        ...base,
+                        type: 'Hospital',
+                        discharge: {
+                            date: dischargeDate,
+                            criteria: dischargeCriteria,
+                        },
+                    };
+                case 'OccupationalHealthcare':
+                    return {
+                        ...base,
+                        type: 'OccupationalHealthcare',
+                        employerName,
+                        sickLeave: !sickLeaveStart && !sickLeaveEnd ? undefined : {
+                            startDate: sickLeaveStart,
+                            endDate: sickLeaveEnd,
+                        },
+                    };
+                default:
+                    return assertNever(type);
+            }
+        };
+
+        try {
+            const newEntry = await patientService.addEntry(patient.id, buildEntry());
+            setPatient({ ...patient, entries: patient.entries.concat(newEntry) });
             setDescription('');
             setDate('');
             setSpecialist('');
             setHealthCheckRating('');
             setDiagnosisCodes('');
             setErrorMessage('');
+            setEmployerName('');
+            setDischargeDate('');
+            setDischargeCriteria('');
+            setSickLeaveStart('');
+            setSickLeaveEnd('');
         } catch (error: unknown) {
             if (axios.isAxiosError<ValidationErrorResponse>(error)) {
                 const data = error.response?.data;
@@ -95,11 +139,49 @@ const PatientPage = ({ diagnoses }: Props) => {
 
             <form onSubmit={(event) => void entryCreation(event)}>
                 <h2>New Entry</h2>
+                <p>
+                    Type:
+                    <select value={type} onChange={(event) => setType(event.target.value as Entry['type'])}>
+                        <option value="HealthCheck">HealthCheck</option>
+                        <option value="Hospital">Hospital</option>
+                        <option value="OccupationalHealthcare">OccupationalHealthcare</option>
+                    </select>
+                </p>
                 <p>Description: <input value={description} onChange={(event) => setDescription(event.target.value)} /></p>
                 <p>Date: <input value={date} onChange={(event) => setDate(event.target.value)} /></p>
                 <p>Specialist: <input value={specialist} onChange={(event) => setSpecialist(event.target.value)} /></p>
-                <p>HealthCheckRating: <input value={healthCheckRating} onChange={(event) => setHealthCheckRating(event.target.value)} /></p>
                 <p>Diagnosis Codes: <input value={diagnosisCodes} onChange={(event) => setDiagnosisCodes(event.target.value)} /></p>
+                {type === 'HealthCheck' && (
+                    <p>
+                        HealthCheckRating: <input value={healthCheckRating} onChange={(event) => setHealthCheckRating(event.target.value)} />
+                    </p>
+                )}
+                {type === 'Hospital' && (
+                    <>
+                        <p>
+                            Discharge date: <input value={dischargeDate} onChange={(event) => setDischargeDate(event.target.value)} />
+                        </p>
+                        <p>
+                            Discharge criteria: <input value={dischargeCriteria} onChange={(event) => setDischargeCriteria(event.target.value)} />
+                        </p>
+                    </>
+                )}
+                {type === 'OccupationalHealthcare' && (
+                    <>
+                        <p>
+                            Employer: <input value={employerName} onChange={(event) => setEmployerName(event.target.value)} />
+                        </p>
+                        <div>
+                            Sick Leave:
+                            <div>
+                                Start Date: <input value={sickLeaveStart} onChange={(event) => setSickLeaveStart(event.target.value)} />
+                            </div>
+                            <div>
+                                End Date: <input value={sickLeaveEnd} onChange={(event) => setSickLeaveEnd(event.target.value)} />
+                            </div>
+                        </div>
+                    </>
+                )}
                 <button type="submit">Submit</button>
             </form><br />
 
