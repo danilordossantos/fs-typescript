@@ -4,6 +4,7 @@ import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
 import HealthRatingBar from "./HealthRatingBar";
+import { Card, CardContent, List, ListItem, ListItemText, Typography } from "@mui/material";
 
 interface Props {
     entry: Entry;
@@ -17,7 +18,7 @@ const EntryDetails = ({ entry, diagnoses }: Props) => {
                 return (
                     <>
                         <LocalHospitalIcon />
-                        <p>Discharge: {entry.discharge.date} {entry.discharge.criteria}</p>
+                        <Typography variant="body1">Discharge: {entry.discharge.date} {entry.discharge.criteria}</Typography>
                     </>
                 );
             case "HealthCheck":
@@ -31,11 +32,11 @@ const EntryDetails = ({ entry, diagnoses }: Props) => {
                 return (
                     <>
                         <HealthAndSafetyIcon />
-                        <p>Employer: {entry.employerName}</p>
+                        <Typography variant="body1">Employer: {entry.employerName}</Typography>
                         {entry.sickLeave && (
-                            <p>
+                            <Typography variant="body1">
                                 Sick Leave: {entry.sickLeave.startDate} - {entry.sickLeave.endDate}
-                            </p>
+                            </Typography>
                         )}
                     </>
                 );
@@ -45,20 +46,26 @@ const EntryDetails = ({ entry, diagnoses }: Props) => {
     };
 
     return (
-        <div style={{ border: '1px solid gray', borderRadius: 5, padding: 10, marginBottom: 10 }}>
-            <p>{entry.date}</p>
-            <p>{entry.description}</p>
-            {entry.diagnosisCodes && (
-                <ul>
-                    {entry.diagnosisCodes.map(code => {
-                        const diagnosis = diagnoses.find(d => d.code === code);
-                        return <li key={code}>{code} {diagnosis?.name}</li>;
-                    })}
-                </ul>
-            )}
-            {typeDetails()}
-            <p>diagnosed by {entry.specialist}</p>
-        </div>
+        <Card variant="outlined" sx={{ mb: 2 }}>
+            <CardContent>
+                <Typography variant="body1">{entry.date}</Typography>
+                <Typography variant="body1">{entry.description}</Typography>
+                {entry.diagnosisCodes && (
+                    <List dense>
+                        {entry.diagnosisCodes.map(code => {
+                            const diagnosis = diagnoses.find(d => d.code === code);
+                            return (
+                                <ListItem key={code}>
+                                    <ListItemText primary={code} secondary={diagnosis?.name} />
+                                </ListItem>
+                            );
+                        })}
+                    </List>
+                )}
+                {typeDetails()}
+                <Typography variant="body1">diagnosed by {entry.specialist}</Typography>
+            </CardContent>
+        </Card>
     );
 
 };

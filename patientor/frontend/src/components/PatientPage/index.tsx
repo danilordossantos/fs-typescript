@@ -9,6 +9,7 @@ import { assertNever } from "../../utils";
 import EntryDetails from "../EntryDetails";
 import axios from "axios";
 import AddEntryForm from "../AddEntryForm";
+import { Alert, Typography } from "@mui/material";
 
 interface Props {
     diagnoses: Diagnosis[]
@@ -67,19 +68,19 @@ const PatientPage = ({ diagnoses }: Props) => {
     };
 
     if (!patient) {
-        return <p>Loading...</p>;
+        return <Typography variant="body1">Loading...</Typography>;
     }
 
     return (
         <>
-            <h1>{patient.name} <GenderIcon gender={patient.gender} /> </h1>
-            <p>SSN: {patient.ssn}</p>
-            <p>Occupation: {patient.occupation}</p><br />
-            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+            <Typography variant="h4">{patient.name} <GenderIcon gender={patient.gender} /> </Typography>
+            <Typography variant="body1">SSN: {patient.ssn}</Typography>
+            <Typography variant="body1">Occupation: {patient.occupation}</Typography>
+            {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
             <AddEntryForm onSubmit={submitNewEntry} />
-            <h2>Entries</h2>
+            <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Entries</Typography>
             {patient.entries.length === 0 ? (
-                <p>No entries</p>
+                <Typography variant="body1">No entries</Typography>
             ) : (patient.entries.map(entry => (
                 <EntryDetails key={entry.id} entry={entry} diagnoses={diagnoses} />
             )))}
