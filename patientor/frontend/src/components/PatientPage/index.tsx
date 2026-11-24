@@ -1,13 +1,15 @@
 import { useParams } from "react-router-dom";
 import patientService from '../../services/patients';
-import { Diagnosis, Gender, HealthCheckRating, Patient, ValidationErrorResponse } from "../../types";
-import React, { useEffect, useState } from "react";
+import { Diagnosis, EntryWithoutId, Gender, Patient, ValidationErrorResponse } from "../../types";
+import { useEffect, useState } from "react";
 import MaleIcon from '@mui/icons-material/Male';
 import FemaleIcon from '@mui/icons-material/Female';
 import TransgenderIcon from '@mui/icons-material/Transgender';
 import { assertNever } from "../../utils";
 import EntryDetails from "../EntryDetails";
 import axios from "axios";
+import AddEntryForm from "../AddEntryForm";
+import { Alert, Typography } from "@mui/material";
 
 interface Props {
     diagnoses: Diagnosis[]
@@ -28,14 +30,8 @@ const GenderIcon = ({ gender }: { gender: Gender }) => {
 
 const PatientPage = ({ diagnoses }: Props) => {
     const [patient, setPatient] = useState<Patient>();
-    const [description, setDescription] = useState('');
-    const [date, setDate] = useState('');
-    const [specialist, setSpecialist] = useState('');
-    const [healthCheckRating, setHealthCheckRating] = useState('');
-    const [diagnosisCodes, setDiagnosisCodes] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const params = useParams();
-
 
     useEffect(() => {
         const fetchPatientPage = async () => {
@@ -47,27 +43,16 @@ const PatientPage = ({ diagnoses }: Props) => {
         void fetchPatientPage();
     }, [params.id]);
 
-    const entryCreation = async (event: React.SyntheticEvent) => {
-        event.preventDefault();
+    const submitNewEntry = async (entry: EntryWithoutId): Promise<boolean> => {
         if (!patient) {
-            return;
+            return false;
         }
+
         try {
-            const newEntry = await patientService.addEntry(patient.id, {
-                type: 'HealthCheck',
-                description,
-                date,
-                specialist,
-                healthCheckRating: Number(healthCheckRating) as HealthCheckRating,
-                diagnosisCodes: diagnosisCodes === '' ? undefined : diagnosisCodes.split(',').map(d => d.trim())
-            });
-            setPatient({...patient, entries: patient.entries.concat(newEntry)});
-            setDescription('');
-            setDate('');
-            setSpecialist('');
-            setHealthCheckRating('');
-            setDiagnosisCodes('');
+            const newEntry = await patientService.addEntry(patient.id, entry);
+            setPatient({ ...patient, entries: patient.entries.concat(newEntry) });
             setErrorMessage('');
+            return true;
         } catch (error: unknown) {
             if (axios.isAxiosError<ValidationErrorResponse>(error)) {
                 const data = error.response?.data;
@@ -78,34 +63,24 @@ const PatientPage = ({ diagnoses }: Props) => {
                     setErrorMessage('Something went wrong');
                 }
             }
+            return false;
         }
     };
 
     if (!patient) {
-        return <p>Loading...</p>;
+        return <Typography variant="body1">Loading...</Typography>;
     }
 
     return (
         <>
-            <h1>{patient.name} <GenderIcon gender={patient.gender} /> </h1>
-            <p>SSN: {patient.ssn}</p>
-            <p>Occupation: {patient.occupation}</p><br />
-
-            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-
-            <form onSubmit={(event) => void entryCreation(event)}>
-                <h2>New Entry</h2>
-                <p>Description: <input value={description} onChange={(event) => setDescription(event.target.value)} /></p>
-                <p>Date: <input value={date} onChange={(event) => setDate(event.target.value)} /></p>
-                <p>Specialist: <input value={specialist} onChange={(event) => setSpecialist(event.target.value)} /></p>
-                <p>HealthCheckRating: <input value={healthCheckRating} onChange={(event) => setHealthCheckRating(event.target.value)} /></p>
-                <p>Diagnosis Codes: <input value={diagnosisCodes} onChange={(event) => setDiagnosisCodes(event.target.value)} /></p>
-                <button type="submit">Submit</button>
-            </form><br />
-
-            <h2>Entries</h2>
+            <Typography variant="h4">{patient.name} <GenderIcon gender={patient.gender} /> </Typography>
+            <Typography variant="body1">SSN: {patient.ssn}</Typography>
+            <Typography variant="body1">Occupation: {patient.occupation}</Typography>
+            {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+            <AddEntryForm onSubmit={submitNewEntry} />
+            <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Entries</Typography>
             {patient.entries.length === 0 ? (
-                <p>No entries</p>
+                <Typography variant="body1">No entries</Typography>
             ) : (patient.entries.map(entry => (
                 <EntryDetails key={entry.id} entry={entry} diagnoses={diagnoses} />
             )))}
