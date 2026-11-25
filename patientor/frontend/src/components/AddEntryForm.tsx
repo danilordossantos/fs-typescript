@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Entry, EntryWithoutId, HealthCheckRating } from "../types";
 import { assertNever } from "../utils";
-import { Box, Button, MenuItem, TextField, Typography } from '@mui/material';
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 
 interface Props {
     onSubmit: (entry: EntryWithoutId) => Promise<boolean>
@@ -11,7 +11,7 @@ const AddEntryForm = ({ onSubmit }: Props) => {
     const [description, setDescription] = useState('');
     const [date, setDate] = useState('');
     const [specialist, setSpecialist] = useState('');
-    const [healthCheckRating, setHealthCheckRating] = useState('');
+    const [healthCheckRating, setHealthCheckRating] = useState<HealthCheckRating>(HealthCheckRating.Healthy);
     const [diagnosisCodes, setDiagnosisCodes] = useState('');
     const [type, setType] = useState<Entry['type']>('HealthCheck');
     const [employerName, setEmployerName] = useState('');
@@ -33,7 +33,7 @@ const AddEntryForm = ({ onSubmit }: Props) => {
                 return {
                     ...base,
                     type: 'HealthCheck',
-                    healthCheckRating: Number(healthCheckRating) as HealthCheckRating, // remove in 9.32
+                    healthCheckRating,
                 };
             case 'Hospital':
                 return {
@@ -66,7 +66,7 @@ const AddEntryForm = ({ onSubmit }: Props) => {
             setDescription('');
             setDate('');
             setSpecialist('');
-            setHealthCheckRating('');
+            setHealthCheckRating(HealthCheckRating.Healthy);
             setDiagnosisCodes('');
             setEmployerName('');
             setDischargeDate('');
@@ -89,7 +89,7 @@ const AddEntryForm = ({ onSubmit }: Props) => {
                     value={type}
                     onChange={({ target }) => setType(target.value as Entry['type'])}
                 >
-                    <MenuItem value="HealthCheck">HealthCheck</MenuItem>
+                    <MenuItem value="HealthCheck">Health Check</MenuItem>
                     <MenuItem value="Hospital">Hospital</MenuItem>
                     <MenuItem value="OccupationalHealthcare">Occupational Healthcare</MenuItem>
                 </TextField>
@@ -108,6 +108,12 @@ const AddEntryForm = ({ onSubmit }: Props) => {
                     margin="dense"
                     value={date}
                     onChange={({ target }) => setDate(target.value)}
+                    type="date"
+                    slotProps={{
+                        inputLabel: {
+                            shrink: true,
+                        },
+                    }}
                 />
                 <TextField
                     label="Specialist"
@@ -126,14 +132,25 @@ const AddEntryForm = ({ onSubmit }: Props) => {
                     onChange={({ target }) => setDiagnosisCodes(target.value)}
                 />
                 {type === 'HealthCheck' && (
-                    <TextField
-                        label="HealthCheck Rating"
-                        size="small"
-                        fullWidth
-                        margin="dense"
-                        value={healthCheckRating}
-                        onChange={({ target }) => setHealthCheckRating(target.value)}
-                    />
+                    <FormControl size="small" fullWidth margin="dense">
+                        <InputLabel id="healthCheckSelect">HealthCheck Rating</InputLabel>
+                        <Select
+                            labelId="healthCheckSelect"
+                            label="HealthCheck Rating"
+                            value={healthCheckRating}
+                            onChange={({ target }) => {
+                                if (typeof target.value === 'number') {
+                                    setHealthCheckRating(target.value);
+                                }
+                            }}
+                        >
+                            {Object.entries(HealthCheckRating).map(([name, value]) => (
+                                <MenuItem key={name} value={value}>
+                                    {name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                 )}
                 {type === 'Hospital' && (
                     <>
@@ -144,6 +161,12 @@ const AddEntryForm = ({ onSubmit }: Props) => {
                             margin="dense"
                             value={dischargeDate}
                             onChange={({ target }) => setDischargeDate(target.value)}
+                            type="date"
+                            slotProps={{
+                                inputLabel: {
+                                    shrink: true,
+                                },
+                            }}
                         />
                         <TextField
                             label="Discharge Criteria"
@@ -176,6 +199,12 @@ const AddEntryForm = ({ onSubmit }: Props) => {
                                 margin="dense"
                                 value={sickLeaveStart}
                                 onChange={({ target }) => setSickLeaveStart(target.value)}
+                                type="date"
+                                slotProps={{
+                                    inputLabel: {
+                                        shrink: true,
+                                    },
+                                }}
                             />
                             <TextField
                                 label="End Date"
@@ -184,6 +213,12 @@ const AddEntryForm = ({ onSubmit }: Props) => {
                                 margin="dense"
                                 value={sickLeaveEnd}
                                 onChange={({ target }) => setSickLeaveEnd(target.value)}
+                                type="date"
+                                slotProps={{
+                                    inputLabel: {
+                                        shrink: true,
+                                    },
+                                }}
                             />
                         </Box>
                     </>
