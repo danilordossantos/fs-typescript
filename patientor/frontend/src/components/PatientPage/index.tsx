@@ -77,7 +77,7 @@ const PatientPage = ({ diagnoses }: Props) => {
             <Typography variant="body1">SSN: {patient.ssn}</Typography>
             <Typography variant="body1">Occupation: {patient.occupation}</Typography>
             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-            <AddEntryForm onSubmit={submitNewEntry} />
+            <AddEntryForm onSubmit={submitNewEntry} diagnoses={diagnoses} />
             <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Entries</Typography>
             {patient.entries.length === 0 ? (
                 <Typography variant="body1">No entries</Typography>
