@@ -1,31 +1,32 @@
 import React, { useState } from "react";
-import { Entry, EntryWithoutId, HealthCheckRating } from "../types";
+import { Diagnosis, Entry, EntryWithoutId, HealthCheckRating } from "../types";
 import { assertNever } from "../utils";
 import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 
 interface Props {
-    onSubmit: (entry: EntryWithoutId) => Promise<boolean>
+    onSubmit: (entry: EntryWithoutId) => Promise<boolean>;
+    diagnoses: Diagnosis[];
 }
 
-const AddEntryForm = ({ onSubmit }: Props) => {
+const AddEntryForm = ({ onSubmit, diagnoses }: Props) => {
     const [description, setDescription] = useState('');
     const [date, setDate] = useState('');
     const [specialist, setSpecialist] = useState('');
     const [healthCheckRating, setHealthCheckRating] = useState<HealthCheckRating>(HealthCheckRating.Healthy);
-    const [diagnosisCodes, setDiagnosisCodes] = useState('');
     const [type, setType] = useState<Entry['type']>('HealthCheck');
     const [employerName, setEmployerName] = useState('');
     const [dischargeDate, setDischargeDate] = useState('');
     const [dischargeCriteria, setDischargeCriteria] = useState('');
     const [sickLeaveStart, setSickLeaveStart] = useState('');
     const [sickLeaveEnd, setSickLeaveEnd] = useState('');
+    const [selectedCodes, setSelectedCodes] = useState<Array<Diagnosis['code']>>([]);
 
     const buildEntry = (): EntryWithoutId => {
         const base = {
             description,
             date,
             specialist,
-            diagnosisCodes: diagnosisCodes === '' ? undefined : diagnosisCodes.split(',').map(d => d.trim()),
+            diagnosisCodes: selectedCodes.length === 0 ? undefined : selectedCodes,
         };
 
         switch (type) {
@@ -67,12 +68,12 @@ const AddEntryForm = ({ onSubmit }: Props) => {
             setDate('');
             setSpecialist('');
             setHealthCheckRating(HealthCheckRating.Healthy);
-            setDiagnosisCodes('');
             setEmployerName('');
             setDischargeDate('');
             setDischargeCriteria('');
             setSickLeaveStart('');
             setSickLeaveEnd('');
+            setSelectedCodes([]);
         }
     };
 
@@ -123,14 +124,25 @@ const AddEntryForm = ({ onSubmit }: Props) => {
                     value={specialist}
                     onChange={({ target }) => setSpecialist(target.value)}
                 />
-                <TextField
-                    label="Diagnosis Codes"
-                    size="small"
-                    fullWidth
-                    margin="dense"
-                    value={diagnosisCodes}
-                    onChange={({ target }) => setDiagnosisCodes(target.value)}
-                />
+                <FormControl size="small" fullWidth margin="dense">
+                    <InputLabel id="diagnosisCodesSelect">Diagnosis Codes</InputLabel>
+                    <Select
+                        labelId="diagnosisCodesSelect"
+                        label="Diagnosis Codes"
+                        value={selectedCodes}
+                        onChange={({ target }) => {
+                            setSelectedCodes(typeof target.value === 'string' ? target.value.split(',') : target.value);
+                        }}
+                        multiple
+                        renderValue={(selected) => selected.join(', ')}
+                        >
+                            {diagnoses.map(d => (
+                                <MenuItem key={d.code} value={d.code}>
+                                    {d.code} - {d.name}
+                                </MenuItem>
+                            ))}
+                    </Select>
+                </FormControl>
                 {type === 'HealthCheck' && (
                     <FormControl size="small" fullWidth margin="dense">
                         <InputLabel id="healthCheckSelect">HealthCheck Rating</InputLabel>
